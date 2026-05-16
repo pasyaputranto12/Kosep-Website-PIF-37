@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>PIF XXXVII | Pekan Ilmiah Fisika Nasional 2026 | UNNES</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: #071426; font-family: 'Poppins', 'Inter', sans-serif; overflow-x: hidden; color: #F4F9FF; cursor: default; }
+        .custom-cursor { width: 20px; height: 20px; background: rgba(94, 242, 255, 0.5); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; mix-blend-mode: difference; backdrop-filter: blur(4px); border: 1px solid #5EF2FF; transition: transform 0.1s; }
+        html { scroll-behavior: smooth; }
+        .glass { background: rgba(7, 20, 38, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(0, 180, 255, 0.25); border-radius: 28px; }
+        .glass-card { background: rgba(7, 20, 38, 0.55); backdrop-filter: blur(16px); border: 1px solid rgba(0, 180, 255, 0.3); border-radius: 32px; transition: all 0.3s ease; }
+        .glass-card:hover { border-color: #00B4FF; box-shadow: 0 0 20px rgba(0, 180, 255, 0.3); transform: translateY(-5px); }
+        .neon-text { text-shadow: 0 0 8px #00B4FF, 0 0 20px #5EF2FF; }
+        @keyframes float { 0% { transform: translateY(0px);} 50% { transform: translateY(-15px);} 100% { transform: translateY(0px);} }
+        .floating { animation: float 5s ease-in-out infinite; }
+        @keyframes pulseGlow { 0% { text-shadow: 0 0 2px #5EF2FF; box-shadow: 0 0 2px #5EF2FF;} 100% { text-shadow: 0 0 18px #00B4FF; box-shadow: 0 0 18px #00B4FF;} }
+        .btn-glow:hover { animation: pulseGlow 1s infinite alternate; }
+        #particle-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; pointer-events: none; }
+        .grid-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-image: radial-gradient(circle at 20% 40%, rgba(0,180,255,0.08) 1px, transparent 1px); background-size: 35px 35px; pointer-events: none; z-index: -1; }
+        .countdown-box { background: rgba(0, 0, 0, 0.45); backdrop-filter: blur(8px); border-radius: 20px; padding: 12px 18px; text-align: center; border: 1px solid rgba(94,242,255,0.5); }
+        .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1); }
+        .reveal.active { opacity: 1; transform: translateY(0); }
+        .timeline-futuristic {
+            position: relative;
+            padding: 2rem 0;
+        }
+        .timeline-line {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3px;
+            height: 0%;
+            background: linear-gradient(180deg, #00B4FF, #5EF2FF, #7DFFB3);
+            box-shadow: 0 0 15px #00B4FF;
+            z-index: 1;
+            transition: height 0.8s cubic-bezier(0.22, 0.97, 0.36, 1);
+        }
+        .timeline-item {
+            display: flex;
+            justify-content: flex-end;
+            width: 100%;
+            margin-bottom: 4rem;
+            position: relative;
+            z-index: 5;
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.6s ease-out;
+        }
+        .timeline-item.active-timeline {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .timeline-item:nth-child(even) {
+            justify-content: flex-start;
+        }
+        .timeline-card {
+            width: 45%;
+            background: rgba(7, 20, 38, 0.65);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 180, 255, 0.4);
+            border-radius: 28px;
+            padding: 1.8rem;
+            transition: all 0.4s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .timeline-card:hover {
+            transform: scale(1.02);
+            border-color: #5EF2FF;
+            box-shadow: 0 0 25px rgba(94, 242, 255, 0.3);
+        }
+        .timeline-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(94, 242, 255, 0.1), transparent);
+            transition: left 0.6s;
+        }
+        .timeline-card:hover::before {
+            left: 100%;
+        }
+        .timeline-dot {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 18px;
+            height: 18px;
+            background: #5EF2FF;
+            border-radius: 50%;
+            box-shadow: 0 0 20px #00B4FF;
+            z-index: 10;
+            top: 1.5rem;
+            transition: 0.3s;
+        }
+        .timeline-item:nth-child(odd) .timeline-dot {
+            left: 50%;
+        }
+        @media (max-width: 768px) {
+            .timeline-line { left: 20px; transform: none; }
+            .timeline-item, .timeline-item:nth-child(even) { justify-content: flex-start; padding-left: 50px; }
+            .timeline-card { width: 85%; }
+            .timeline-dot { left: 20px !important; transform: translateX(0); }
+        }
+        .mockup-book { transition: transform 0.4s; cursor: pointer; }
+        .mockup-book:hover { transform: rotateY(-5deg) rotateX(3deg); }
+    </style>
+</head>
+<body>
+<div class="custom-cursor" id="cursor"></div>
+<canvas id="particle-canvas"></canvas>
+<div class="grid-overlay"></div>
+<nav id="navbar" class="fixed top-0 w-full z-50 transition-all duration-500 py-4 px-6 md:px-12 glass" style="background: rgba(7,20,38,0.7); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,180,255,0.4);">
+    <div class="container mx-auto flex justify-between items-center">
+        <div class="text-2xl font-bold tracking-wider"><span class="text-[#5EF2FF]">PIF</span> XXXVII <span class="text-sm font-light">| NASIONAL 2026</span></div>
+        <div class="hidden md:flex space-x-8 text-[#F4F9FF] font-medium">
+            <a href="#home" class="nav-link hover:text-[#5EF2FF] transition-all">Home</a>
+            <a href="#about" class="nav-link hover:text-[#5EF2FF] transition-all">Profil</a>
+            <a href="#events" class="nav-link hover:text-[#5EF2FF] transition-all">Events</a>
+            <a href="#timeline-futuristic" class="nav-link hover:text-[#5EF2FF] transition-all">Timeline</a>
+            <a href="#guidebook" class="nav-link hover:text-[#5EF2FF] transition-all">Panduan</a>
+            <a href="#contact" class="nav-link hover:text-[#5EF2FF] transition-all">Kontak</a>
+        </div>
+        <div class="md:hidden">
+            <button id="menu-btn" class="text-3xl focus:outline-none"><i class="fas fa-bars"></i></button>
+        </div>
+    </div>
+    <div id="mobile-menu" class="hidden flex-col mt-4 space-y-3 text-center glass py-5 rounded-2xl md:hidden">
+        <a href="#home" class="block py-2">Home</a><a href="#about" class="block py-2">Profil</a><a href="#events" class="block py-2">Events</a>
+        <a href="#timeline-futuristic" class="block py-2">Timeline</a><a href="#guidebook" class="block py-2">Panduan</a><a href="#contact" class="block py-2">Kontak</a>
+    </div>
+</nav>
+
+<main>
+    <section id="home" class="min-h-screen flex flex-col justify-center items-center relative pt-24 px-5">
+        <div class="container mx-auto text-center z-10">
+            <div class="floating inline-block px-6 py-2 rounded-full glass mb-6 backdrop-blur-md">
+                <span class="text-[#5EF2FF]"><i class="fas fa-microchip"></i> Himpunan Mahasiswa Fisika FMIPA UNNES</span>
+            </div>
+            <h1 class="text-5xl md:text-7xl font-extrabold leading-tight"><span class="neon-text">Pekan Ilmiah Fisika</span><br><span class="text-[#F4F9FF]">XXXVII Tingkat Nasional 2026</span></h1>
+            <div class="text-xl md:text-2xl mt-6 max-w-4xl mx-auto font-light leading-relaxed px-4" id="full-theme-text">
+                "Membangun Peradaban Berkelanjutan melalui Sinergi Pendidikan, Sains, Teknologi, dan Inovasi Digital sebagai Fondasi Generasi Inovatif"
+            </div>
+            <!-- Hitung Mundur -->
+            <div class="flex flex-wrap justify-center gap-4 mt-10">
+                <div class="countdown-box"><div id="days" class="text-3xl font-bold text-[#5EF2FF]">00</div><div class="text-xs">Hari</div></div>
+                <div class="countdown-box"><div id="hours" class="text-3xl font-bold text-[#5EF2FF]">00</div><div class="text-xs">Jam</div></div>
+                <div class="countdown-box"><div id="minutes" class="text-3xl font-bold text-[#5EF2FF]">00</div><div class="text-xs">Menit</div></div>
+                <div class="countdown-box"><div id="seconds" class="text-3xl font-bold text-[#5EF2FF]">00</div><div class="text-xs">Detik</div></div>
+            </div>
+            <div class="flex flex-wrap gap-5 justify-center mt-12">
+                <button class="bg-gradient-to-r from-[#00B4FF] to-[#5EF2FF] text-[#071426] font-bold py-4 px-8 rounded-full text-lg shadow-lg transition-all hover:scale-105 btn-glow">Explore Event <i class="fas fa-arrow-right"></i></button>
+                <button class="glass border border-[#5EF2FF] py-4 px-8 rounded-full text-lg font-semibold hover:bg-[#5EF2FF]/20 transition-all hover:scale-105">Daftar Sekarang <i class="fas fa-user-astronaut"></i></button>
+            </div>
+        </div>
+        <div class="absolute w-72 h-72 rounded-full bg-[#00B4FF] blur-[120px] opacity-30 top-1/3 left-1/4 animate-pulse"></div>
+        <div class="absolute w-96 h-96 rounded-full bg-[#7DFFB3] blur-[150px] opacity-20 bottom-10 right-10"></div>
+    </section>
+
+    <!-- Section -->
+    <section id="about" class="py-24 px-6 relative">
+        <div class="container mx-auto">
+            <div class="text-center mb-16 reveal"><h2 class="text-4xl md:text-5xl font-bold"><span class="border-b-4 border-[#5EF2FF] pb-2">Tentang PIF XXXVII</span></h2><p class="mt-4 text-gray-300">Mewujudkan Generasi Inovatif melalui Sinergi Pendidikan, Sains, Teknologi & Inovasi Digital</p></div>
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="glass-card p-8 reveal">
+                    <i class="fas fa-atom text-5xl text-[#5EF2FF] mb-4"></i>
+                    <h3 class="text-2xl font-bold">Visi & Latar Belakang</h3>
+                    <p class="mt-3 text-gray-300 leading-relaxed">
+                        <span class="text-[#5EF2FF] font-semibold">"Membangun Peradaban Berkelanjutan melalui Sinergi Pendidikan, Sains, Teknologi, dan Inovasi Digital sebagai Fondasi Generasi Inovatif"</span><br><br>
+                        Berangkat dari semangat tersebut, PIF XXXVII hadir sebagai wadah generasi muda untuk meningkatkan kualitas pengetahuan, mengasah kemampuan akademik, serta memperluas wawasan sains. Dengan mengusung sinergi antar disiplin, kegiatan ini mendorong pemikiran kritis, kreatif, dan adaptif terhadap perkembangan zaman, sekaligus membangun fondasi kokoh bagi lahirnya generasi inovatif.
+                    </p>
+                    <div class="grid grid-cols-3 gap-4 mt-6 text-center">
+                        <div><div class="counter text-3xl font-bold text-[#5EF2FF]" data-target="37">0</div><p>Tahun Perjalanan</p></div>
+                        <div><div class="counter text-3xl font-bold text-[#5EF2FF]" data-target="1500">0</div><p>+ Peserta</p></div>
+                        <div><div class="counter text-3xl font-bold text-[#5EF2FF]" data-target="4">0</div><p>Event Bergengsi</p></div>
+                    </div>
+                </div>
+                <div class="glass-card p-8 reveal">
+                    <i class="fas fa-chalkboard-user text-5xl text-[#00B4FF] mb-4"></i>
+                    <h3 class="text-2xl font-bold">Maksud, Tujuan & Sasaran</h3>
+                    <p class="text-gray-300">Meningkatkan kreativitas masyarakat dalam bidang akademik melalui pemahaman sikap ilmiah, teknologi dan fenomena sains. Memperkenalkan fisika ke masyarakat luas, menyediakan wadah kreativitas, memfasilitasi saintis muda berprestasi. Sasaran: Siswa SMP, SMA, Mahasiswa, Guru, Dosen, dan Masyarakat Umum se-Indonesia.</p>
+                    <div class="mt-5 flex flex-wrap gap-3"><i class="fas fa-school text-[#7DFFB3]"></i><span>SMP/Sederajat</span><i class="fas fa-graduation-cap text-[#7DFFB3] ml-4"></i><span>SMA/Sederajat</span><i class="fas fa-university text-[#7DFFB3] ml-4"></i><span>Mahasiswa</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="events" class="py-24 px-6 bg-[#061020]">
+        <div class="container mx-auto">
+            <div class="text-center reveal mb-14"><h2 class="text-4xl font-bold">Rangkaian <span class="text-[#5EF2FF]">Event PIF XXXVII</span></h2><p>Kompetisi, Seminar & Lomba Ilmiah Tingkat Nasional</p></div>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="glass-card p-6 text-center reveal"><i class="fas fa-flask text-4xl text-[#5EF2FF] mb-3"></i><h3 class="font-bold text-xl">Kompetisi Fisika SMP</h3><p class="text-sm">Tes CBT, LCC & Praktikum. Hadiah total jutaan rupiah + Piala Gubernur</p><span class="text-xs text-[#5EF2FF]">3-18 Oktober 2026</span></div>
+                <div class="glass-card p-6 text-center reveal"><i class="fas fa-rocket text-4xl text-[#00B4FF] mb-3"></i><h3 class="font-bold text-xl">Kompetisi Fisika SMA</h3><p class="text-sm">Soal open-ended, praktikum & presentasi. Juara dapat tabanas + piala tetap.</p><span class="text-xs text-[#5EF2FF]">3-18 Oktober 2026</span></div>
+                <div class="glass-card p-6 text-center reveal"><i class="fas fa-chalkboard text-4xl text-[#7DFFB3] mb-3"></i><h3 class="font-bold text-xl">Seminar Nasional</h3><p class="font-semibold text-[#5EF2FF]">"STEM Innovation and Scientific Exploration for Sustainable Industry and Education"</p><p class="text-sm mt-1">(Inovasi STEM dan Eksplorasi Sains untuk Pendidikan dan Industri Berkelanjutan)</p><span class="text-xs text-[#5EF2FF]">19 September 2026 | UNNES</span></div>
+                <div class="glass-card p-6 text-center reveal"><i class="fas fa-file-alt text-4xl text-[#5EF2FF] mb-3"></i><h3 class="font-bold text-xl">LKTI SMA</h3><p>Lomba Karya Tulis Ilmiah. Tema:Mewujudkan masa depan berkelanjutan melalui inovasi dan teknologi berbasis sains.</p><span class="text-xs">Final 18 Oktober</span></div>
+                <div class="glass-card p-6 text-center reveal"><i class="fas fa-pen-fancy text-4xl text-[#00B4FF] mb-3"></i><h3 class="font-bold text-xl">Lomba Esai Mahasiswa</h3><p>Integrasi Sains, Teknologi & Transformasi Digital untuk Masa Depan Berkelanjutan.</p><span class="text-xs">Pengiriman 30 Juli - 30 Sept</span></div>
+                <div class="glass-card p-6 text-center reveal"><i class="fas fa-chart-line text-4xl text-[#7DFFB3] mb-3"></i><h3 class="font-bold text-xl">Bazar & Expo LKTI</h3><p class="text-sm">Pameran hasil karya ilmiah dari finalis LKTI.</p><span class="text-xs">18 Oktober 2026 | Area D3 FMIPA UNNES</span></div>
+            </div>
+            <div class="text-center mt-10 text-sm text-gray-400">Pendaftaran dibuka untuk seluruh wilayah Indonesia | Hadiah total juta rupiah + Piala Gubernur Jateng</div>
+        </div>
+    </section>
+    <section id="timeline-futuristic" class="py-24 px-6 relative overflow-hidden">
+        <div class="container mx-auto">
+            <div class="text-center reveal mb-12">
+                <h2 class="text-4xl font-bold"><span class="border-b-4 border-[#5EF2FF] pb-2">Timeline</span></h2>
+                <p class="text-gray-300 mt-4">Jejak langkah menuju puncak event nasional</p>
+            </div>
+            <div class="timeline-futuristic relative">
+                <div id="timelineLine" class="timeline-line" style="height: 0%;"></div>
+                
+                <div class="timeline-item" data-year="2026">
+                    <div class="timeline-card">
+                        <div class="flex items-center gap-3 mb-3"><i class="fas fa-calendar-alt text-[#5EF2FF] text-2xl"></i><span class="text-xl font-bold">19 September 2026</span></div>
+                        <h3 class="text-2xl font-semibold text-[#5EF2FF]">Seminar Nasional</h3>
+                        <p class="mt-2">Pembukaan PIF XXXVII dengan Seminar Nasional bertema Inovasi STEM dan Eksplorasi Sains untuk Pendidikan dan Industri Berkelanjutan. Menghadirkan pembicara dari para akademisi dan expert.</p>
+                        <div class="mt-4 flex gap-2 text-sm"><i class="fas fa-map-pin"></i> Gedung D12 FMIPA UNNES</div>
+                    </div>
+                    <div class="timeline-dot"></div>
+                </div>
+                
+                <div class="timeline-item" data-year="2026">
+                    <div class="timeline-card">
+                        <div class="flex items-center gap-3 mb-3"><i class="fas fa-calendar-alt text-[#5EF2FF] text-2xl"></i><span class="text-xl font-bold">3 Oktober 2026</span></div>
+                        <h3 class="text-2xl font-semibold text-[#5EF2FF]">Penyisihan (CBT)</h3>
+                        <p class="mt-2">Babak penyisihan Kompetisi Fisika SMP/SMA secara nasional melalui Computer Based Test. Seleksi 50 besar menuju semifinal offline.</p>
+                        <div class="mt-4 flex gap-2 text-sm"><i class="fas fa-laptop-code"></i> Sistem CBT Online</div>
+                    </div>
+                    <div class="timeline-dot"></div>
+                </div>
+                
+                <div class="timeline-item" data-year="2026">
+                    <div class="timeline-card">
+                        <div class="flex items-center gap-3 mb-3"><i class="fas fa-calendar-alt text-[#5EF2FF] text-2xl"></i><span class="text-xl font-bold">17 Oktober 2026</span></div>
+                        <h3 class="text-2xl font-semibold text-[#5EF2FF]">Semifinal Offline</h3>
+                        <p class="mt-2">Tes tertulis uraian & open-ended bagi 50 finalis terbaik.</p>
+                        <div class="mt-4 flex gap-2 text-sm"><i class="fas fa-university"></i> Universitas Negeri Semarang</div>
+                    </div>
+                    <div class="timeline-dot"></div>
+                </div>
+                
+                <div class="timeline-item" data-year="2026">
+                    <div class="timeline-card">
+                        <div class="flex items-center gap-3 mb-3"><i class="fas fa-calendar-alt text-[#5EF2FF] text-2xl"></i><span class="text-xl font-bold">18 Oktober 2026</span></div>
+                        <h3 class="text-2xl font-semibold text-[#5EF2FF]">Grand Final & Expo</h3>
+                        <p class="mt-2">Puncak acara: Grand Final Kompetisi sekaligus penjurian final LKTI dan Esai Mahasiswa. Malam awarding & penutupan.</p>
+                        <div class="mt-4 flex gap-2 text-sm"><i class="fas fa-trophy"></i> Pengumuman Juara & Piala Gubernur</div>
+                    </div>
+                    <div class="timeline-dot"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bukpan Section -->
+    <section id="guidebook" class="py-24 px-6 relative">
+        <div class="container mx-auto">
+            <div class="text-center reveal mb-12"><h2 class="text-4xl font-bold"><span class="border-b-4 border-[#5EF2FF] pb-2">Buku Panduan PIF XXXVII</span></h2><p class="mt-3 text-gray-300">Pedoman resmi & informasi lengkap rangkaian kompetisi</p></div>
+            <div class="flex flex-wrap items-center justify-center gap-12">
+                <div class="mockup-book w-64 h-80 bg-gradient-to-br from-[#0a2848] to-[#071426] rounded-xl shadow-2xl relative flex flex-col items-center justify-center p-5 border border-[#5EF2FF]/40 transform transition-all hover:scale-105">
+                    <i class="fas fa-book-open text-6xl text-[#5EF2FF] mb-3"></i>
+                    <h3 class="text-2xl font-bold text-center">Panduan Resmi</h3>
+                    <p class="text-center text-sm mt-2">Pekan Ilmiah Fisika XXXVII<br>Kompetisi, Seminar, LKTI & Esai</p>
+                    <div class="absolute -bottom-2 -right-2 w-16 h-16 bg-[#00B4FF] blur-2xl opacity-40 rounded-full"></div>
+                </div>
+                <div class="glass-card p-8 max-w-md reveal text-center">
+                    <i class="fas fa-download text-4xl text-[#7DFFB3] mb-3"></i>
+                    <h3 class="text-2xl font-bold">Unduh Buku Panduan Lengkap</h3>
+                    <p class="mt-2 text-gray-300">Berisi jadwal detail, mekanisme lomba, tata tertib, hadiah, serta petunjuk teknis untuk seluruh cabang kompetisi PIF XXXVII 2026.</p>
+                    <button id="downloadGuideBtn" class="mt-6 bg-gradient-to-r from-[#00B4FF] to-[#5EF2FF] text-[#071426] font-bold py-3 px-6 rounded-full transition-all hover:scale-105 w-full">Download PDF <i class="fas fa-file-pdf"></i></button>
+                </div>
+            </div>
+            <div class="grid md:grid-cols-3 gap-6 mt-16">
+                <div class="glass p-4 text-center"><i class="fas fa-clipboard-list text-[#5EF2FF] text-2xl"></i><p class="font-semibold mt-2">Babak Penyisihan CBT</p><p class="text-xs">3 Oktober 2026</p></div>
+                <div class="glass p-4 text-center"><i class="fas fa-trophy text-[#5EF2FF] text-2xl"></i><p class="font-semibold mt-2">Hadiah Juara</p><p class="text-xs">Piala Gubernur, Wali Kota, Rektor + Tabanas jutaan</p></div>
+                <div class="glass p-4 text-center"><i class="fas fa-users text-[#5EF2FF] text-2xl"></i><p class="font-semibold mt-2">Peserta Nasional</p><p class="text-xs">SMP, SMA, Mahasiswa se-Indonesia</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT Section -->
+    <section id="contact" class="py-24 px-6 relative">
+        <div class="container mx-auto max-w-3xl glass-card p-8 reveal">
+            <h2 class="text-3xl font-bold text-center">Hubungi <span class="text-[#5EF2FF]">Sekretariat PIF</span></h2>
+            <div class="mt-6 space-y-4 text-gray-200">
+                <div class="flex items-start gap-3"><i class="fas fa-map-marker-alt text-[#5EF2FF] text-xl mt-1"></i><div><span class="font-semibold">Alamat Sekretariat:</span><br>Ruang Hima Fisika, Gedung Pusat Kegiatan Mahasiswa Fisika FMIPA UNNES, Kampus Sekaran, Gunungpati, Semarang, 50229</div></div>
+                <div class="flex items-start gap-3"><i class="fas fa-user-tie text-[#5EF2FF] text-xl"></i><div><span class="font-semibold">Ketua Pelaksana:</span><br>Muhamad Pasya Putranto | <a href="tel:085180638806" class="text-[#5EF2FF] hover:underline">0851-8063-8806</a> (WA/Telp)</div></div>
+                <div class="flex items-start gap-3"><i class="fas fa-envelope text-[#5EF2FF] text-xl"></i><div><span class="font-semibold">Email Resmi:</span><br>pif.unnes@fmipa.ac.id</div></div>
+            </div>
+            <form id="contactForm" class="mt-8 space-y-5">
+                <input type="text" placeholder="Nama Lengkap" class="w-full p-4 bg-black/40 rounded-2xl border border-[#00B4FF]/50 focus:border-[#5EF2FF] outline-none text-white">
+                <input type="email" placeholder="Email Institusi" class="w-full p-4 bg-black/40 rounded-2xl border border-[#00B4FF]/50 focus:border-[#5EF2FF] outline-none">
+                <textarea rows="4" placeholder="Pertanyaan seputar PIF XXXVII, pendaftaran, atau kerjasama" class="w-full p-4 bg-black/40 rounded-2xl border border-[#00B4FF]/50 focus:border-[#5EF2FF] outline-none"></textarea>
+                <button type="submit" class="w-full py-4 rounded-full bg-gradient-to-r from-[#00B4FF] to-[#5EF2FF] text-[#071426] font-bold hover:scale-105 transition-all">Kirim Pesan <i class="fas fa-paper-plane"></i></button>
+            </form>
+        </div>
+    </section>
+
+    <footer class="py-12 border-t border-[#00B4FF]/30 text-center">
+        <div class="flex justify-center space-x-6 text-2xl mb-4">
+            <a href="#" class="hover:text-[#5EF2FF] transition-all"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="hover:text-[#5EF2FF]"><i class="fab fa-twitter"></i></a>
+            <a href="#" class="hover:text-[#5EF2FF]"><i class="fab fa-linkedin"></i></a>
+            <a href="#" class="hover:text-[#5EF2FF]"><i class="fab fa-github"></i></a>
+        </div>
+        <p>© 2026 Panitia Pekan Ilmiah Fisika XXXVII | Himpunan Mahasiswa Fisika FMIPA UNNES</p>
+    </footer>
+</main>
+
+<script>
+    const canvas = document.getElementById('particle-canvas');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    const geometry = new THREE.BufferGeometry();
+    const particlesCount = 1500;
+    const positions = new Float32Array(particlesCount * 3);
+    for (let i = 0; i < particlesCount; i++) { positions[i*3] = (Math.random() - 0.5) * 200; positions[i*3+1] = (Math.random() - 0.5) * 100; positions[i*3+2] = (Math.random() - 0.5) * 80 - 40; }
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const material = new THREE.PointsMaterial({ color: 0x5EF2FF, size: 0.2, transparent: true, blending: THREE.AdditiveBlending });
+    const particlesMesh = new THREE.Points(geometry, material);
+    scene.add(particlesMesh);
+    camera.position.z = 30;
+    function animateParticles() { requestAnimationFrame(animateParticles); particlesMesh.rotation.y += 0.0005; particlesMesh.rotation.x += 0.0003; renderer.render(scene, camera); }
+    animateParticles();
+    window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+
+    // Hitung Mundur
+    const countdownDate = new Date("Sep 19, 2026 08:00:00").getTime();
+    setInterval(() => {
+        const now = new Date().getTime();
+        const distance = countdownDate - now;
+        const days = Math.floor(distance / (1000*60*60*24));
+        const hours = Math.floor((distance % (86400000)) / (3600000));
+        const minutes = Math.floor((distance % 3600000) / 60000);
+        const seconds = Math.floor((distance % 60000) / 1000);
+        document.getElementById('days').innerText = days < 0 ? "00" : days;
+        document.getElementById('hours').innerText = hours < 0 ? "00" : hours;
+        document.getElementById('minutes').innerText = minutes < 0 ? "00" : minutes;
+        document.getElementById('seconds').innerText = seconds < 0 ? "00" : seconds;
+    }, 1000);
+
+    // Animasi Scroll
+    const timelineLine = document.getElementById('timelineLine');
+    const timelineItems = document.querySelectorAll('.timeline-item');
+    
+    function activateTimeline() {
+        let triggerHeight = window.innerHeight * 0.8;
+        let visibleItems = 0;
+        timelineItems.forEach((item, index) => {
+            const rect = item.getBoundingClientRect();
+            if(rect.top < triggerHeight && rect.bottom > 100) {
+                item.classList.add('active-timeline');
+                visibleItems++;
+            }
+        });
+        let percentage = (visibleItems / timelineItems.length) * 100;
+        if(percentage > 100) percentage = 100;
+        timelineLine.style.height = percentage + '%';
+    }
+    
+    window.addEventListener('scroll', activateTimeline);
+    window.addEventListener('load', activateTimeline);
+    
+    // Element
+    const revealElements = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => { entries.forEach(entry => { if(entry.isIntersecting) entry.target.classList.add('active'); }); }, { threshold: 0.2 });
+    revealElements.forEach(el => observer.observe(el));
+    
+    // Counters
+    const counters = document.querySelectorAll('.counter');
+    const counterObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => { if(entry.isIntersecting) { const counter = entry.target; const target = parseInt(counter.getAttribute('data-target')); let current = 0; const update = setInterval(() => { if(current < target) { current += Math.ceil(target/40); counter.innerText = current; } else { counter.innerText = target; clearInterval(update); } }, 30); counterObserver.unobserve(counter); } });
+    }, { threshold: 0.6 });
+    counters.forEach(c => counterObserver.observe(c));
+    
+    // Navbar & Mobile
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => { if(window.scrollY > 50) navbar.classList.add('bg-[#071426]/90', 'backdrop-blur-xl'); else navbar.classList.remove('bg-[#071426]/90'); });
+    const menuBtn = document.getElementById('menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+    
+    // Cursor
+    const cursor = document.getElementById('cursor');
+    document.addEventListener('mousemove', (e) => { cursor.style.transform = `translate(${e.clientX - 10}px, ${e.clientY - 10}px)`; });
+    document.querySelectorAll('.glass-card, button, .timeline-card').forEach(card => { card.addEventListener('mouseenter', () => cursor.style.transform = `scale(1.8)`); card.addEventListener('mouseleave', () => cursor.style.transform = `scale(1)`); });
+    
+    // Contact
+    const form = document.getElementById('contactForm');
+    form.addEventListener('submit', (e) => { e.preventDefault(); alert("Terima kasih! Panitia PIF XXXVII akan segera menghubungi Anda. - Muhamad Pasya Putranto (Ketua Pelaksana)"); form.reset(); });
+    
+    // Download Bukpan/guidebook
+    document.getElementById('downloadGuideBtn').addEventListener('click', () => { alert("📘 Buku Panduan PIF XXXVII 2026 segera dirilis. Silakan hubungi kontak panitia untuk akses resmi."); });
+    
+    // Scroll SMooth
+    document.querySelectorAll('.nav-link, button[href^="#"]').forEach(btn => {
+        btn.addEventListener('click', function(e) { const hash = this.getAttribute('href'); if(hash && hash.startsWith('#')) { e.preventDefault(); document.querySelector(hash)?.scrollIntoView({ behavior: 'smooth' }); } });
+    });
+    gsap.fromTo('#home h1', { opacity: 0, y: 50 }, { duration: 1, opacity: 1, y: 0, delay: 0.2 });
+    gsap.fromTo('#full-theme-text', { opacity: 0, y: 20 }, { duration: 0.9, opacity: 1, y: 0, delay: 0.4 });
+    activateTimeline();
+</script>
+</body>
+</html>
